@@ -1,0 +1,6 @@
+#!/bin/bash
+# Hostinger build configuration
+# Force clean build
+rm -rf node_modules dist
+npm ci
+npm run build
