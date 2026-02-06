@@ -1,0 +1,9 @@
+{
+  "name": "Show",
+  "description": "A high-performance video sharing and online teaching platform by SS Labs. Features screen recording, workspace management, and AI-powered video summaries.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "display-capture"
+  ]
+}
