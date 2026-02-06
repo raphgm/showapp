@@ -347,7 +347,6 @@ const App: React.FC = () => {
 
         {/* Dynamic Responsive Bottom Nav Hub - High Fidelity Consolidation */}
         {!selectedVideo && !isMinimized && (
-<<<<<<< HEAD
           <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[150] flex items-center gap-1 p-2 bg-white/95 backdrop-blur-3xl rounded-full border border-slate-100 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]">
             
             {/* Home Button */}
@@ -383,36 +382,6 @@ const App: React.FC = () => {
             >
               <Cloud className={`size-4 ${currentRoute === AppRoute.LIBRARY ? 'fill-indigo-600' : ''}`} />
               <span>Library</span>
-=======
-          <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[150] transition-all duration-700 ease-out flex items-center gap-1.5 p-2 bg-white/95 backdrop-blur-3xl rounded-[40px] border border-slate-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.25)] ring-1 ring-black/5`}>
-            
-            <button 
-              onClick={() => setCurrentRoute(AppRoute.HOME)}
-              className={`flex items-center gap-3 px-6 py-2.5 rounded-[24px] transition-all leading-none group ${currentRoute === AppRoute.HOME ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:bg-slate-50'}`}
-            >
-              <HomeIcon className={`size-4 ${currentRoute === AppRoute.HOME ? 'fill-indigo-600' : 'group-hover:fill-slate-100'}`} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Home</span>
-            </button>
-
-            <div className="w-px h-8 bg-slate-100 mx-1.5" />
-            
-            <button 
-              onClick={handleRecord}
-              className={`flex items-center gap-3 px-6 py-2.5 rounded-[24px] transition-all leading-none group bg-rose-50 text-rose-600 hover:bg-rose-100`}
-            >
-              <VideoIcon className="size-4 fill-rose-600" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Record</span>
-            </button>
-
-            <div className="w-px h-8 bg-slate-100 mx-1.5" />
-
-            <button 
-              onClick={() => setCurrentRoute(AppRoute.LIBRARY)}
-              className={`flex items-center gap-3 px-6 py-2.5 rounded-[24px] transition-all leading-none group ${currentRoute === AppRoute.LIBRARY ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:bg-slate-50'}`}
-            >
-              <Cloud className={`size-4 ${currentRoute === AppRoute.LIBRARY ? 'fill-indigo-600' : 'group-hover:fill-slate-100'}`} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Library</span>
->>>>>>> origin/main
             </button>
           </div>
         )}
