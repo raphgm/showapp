@@ -129,10 +129,8 @@ const StreamStudio: React.FC<StreamStudioProps> = ({ onEnterStudio }) => {
   const [showMeetingLink, setShowMeetingLink] = useState(false);
 
   const handleCreateLink = () => {
-    // Generate a random room ID or use a standard format
-    const newRoomId = Math.random().toString(36).substring(2, 8);
-    // In a real app, you might save this to your backend if it needs to persist
-    const link = `${window.location.origin}/join/${newRoomId}`;
+    // Always use the fixed ROOM_ID so guests land in the room the host is listening on
+    const link = `${window.location.origin}/join/${ROOM_ID}`;
     setCreatedLink(link);
     setShowCreateLinkModal(true);
   };

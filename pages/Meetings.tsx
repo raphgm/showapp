@@ -174,8 +174,9 @@ const RIGHT_TOOLS = [
 // ─── Share Modal ─────────────────────────────────────
 const SimpleShareModal = ({ onClose, activeMeeting }: { onClose: () => void; activeMeeting: any }) => {
   const [copied, setCopied] = useState(false);
-  const meetingSlug = (activeMeeting.title || 'meeting').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  const liveLink = `https://getshowapp.com/${meetingSlug}`;
+  // Use the stored join link if available, otherwise derive it from the room/meeting ID
+  const roomId = activeMeeting?.id || DEFAULT_ROOM_ID;
+  const liveLink = activeMeeting?.link || `${window.location.origin}/join/${roomId}`;
   const handleCopy = () => { navigator.clipboard.writeText(liveLink); setCopied(true); setTimeout(() => setCopied(false), 2500); };
   return (
     <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4" onClick={onClose}>

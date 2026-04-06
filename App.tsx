@@ -365,7 +365,7 @@ const App: React.FC = () => {
       time: 'Just now',
       type: 'Guest',
       attendees: 1,
-      link: `https://getshowapp.com/join/${guestJoinRoomCode}`,
+      link: `${window.location.origin}/join/${roomCode}`,
       wantsRecording: wantsRecording && !!guestEmail,
     };
     setActiveMeeting(guestMeeting);
@@ -400,7 +400,7 @@ const App: React.FC = () => {
       time: 'Just now',
       type: 'Co-host',
       attendees: 1,
-      link: `https://getshowapp.com/join/${roomCode}`,
+      link: `${window.location.origin}/join/${roomCode}`,
     };
     setActiveMeeting(cohostMeeting);
     addToast(`Joined as Co-host — you have full meeting controls`, 'success');
