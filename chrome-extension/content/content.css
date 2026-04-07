@@ -1,0 +1,356 @@
+/* ─── Show Extension – Content Script Styles ─────── */
+
+/* Overlay Container */
+#show-capture-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2147483647;
+  cursor: crosshair;
+}
+
+/* Backdrop */
+.show-overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(1px);
+}
+
+/* Selection Box */
+.show-selection-box {
+  display: none;
+  position: absolute;
+  border: 2px solid #818cf8;
+  background: rgba(99, 102, 241, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.3),
+    0 0 0 4000px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Corner handles */
+.show-selection-box::before,
+.show-selection-box::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #818cf8;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.show-selection-box::before {
+  top: -5px;
+  left: -5px;
+}
+
+.show-selection-box::after {
+  bottom: -5px;
+  right: -5px;
+}
+
+/* Crosshair */
+.show-crosshair {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.show-crosshair-h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(129, 140, 248, 0.4);
+  top: 50%;
+}
+
+.show-crosshair-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(129, 140, 248, 0.4);
+  left: 50%;
+}
+
+/* Toolbar */
+.show-toolbar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.show-toolbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: #0f0f18;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+}
+
+.show-toolbar-hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.show-toolbar-size {
+  font-size: 11px;
+  font-weight: 700;
+  color: #818cf8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.show-toolbar-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.show-toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.show-toolbar-capture {
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.show-toolbar-capture:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+}
+
+.show-toolbar-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+}
+
+.show-toolbar-cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+/* Dimension Label */
+.show-dimension-label {
+  display: none;
+  position: absolute;
+  padding: 3px 8px;
+  background: #0f0f18;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #818cf8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Floating Dock (Show Pill) ───────────────────── */
+#show-floating-dock {
+  position: fixed;
+  z-index: 2147483646;
+  user-select: none;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+#show-floating-dock.dragging {
+  transform: scale(1.02);
+  cursor: grabbing;
+}
+
+/* Brand name inside the handle */
+.show-dock-brand {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6366f1;
+  pointer-events: none;
+}
+
+.show-dock-main {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  box-shadow:
+    0 12px 32px -8px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.show-dock-handle {
+  padding: 4px 6px;
+  cursor: grab;
+  color: #6366f1;
+  transition: background 0.15s;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.show-dock-handle:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.show-dock-handle:active {
+  cursor: grabbing;
+}
+
+.show-dock-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.show-dock-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.show-dock-btn:hover {
+  background: rgba(99, 102, 241, 0.08);
+  color: #6366f1;
+}
+
+.show-dock-btn:active {
+  transform: scale(0.94);
+}
+
+.show-dock-btn.loading {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.show-dock-btn.loading svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.show-dock-snap {
+  background: #6366f1;
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.show-dock-snap:hover {
+  background: #4f46e5;
+  color: white;
+}
+
+.show-dock-open {
+  background: #0f172a;
+  color: white;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+}
+
+.show-dock-open:hover {
+  background: #1e293b;
+  color: white;
+}
+
+/* Toast Notification */
+.show-toast {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  background: #0f0f18;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 16px;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 20px rgba(99, 102, 241, 0.15);
+  z-index: 2147483647;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+  transform: translateX(120%);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.show-toast.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.show-toast.error {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.show-toast-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #10b981;
+}
+
+.show-toast.error .show-toast-icon {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}

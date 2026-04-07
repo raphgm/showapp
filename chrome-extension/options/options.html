@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Show Extension – Settings</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a14;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 40px;
+    }
+    
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b27b2, #8227b2, #b61cc9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(59, 39, 178, 0.3);
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    
+    .header h1 span {
+      color: #64748b;
+      font-weight: 500;
+      font-size: 14px;
+      margin-left: 8px;
+    }
+    
+    .section {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    
+    .section-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+    
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+    
+    .setting-info {
+      flex: 1;
+    }
+    
+    .setting-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 2px;
+    }
+    
+    .setting-desc {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 500;
+    }
+    
+    /* Toggle Switch */
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.2s;
+    }
+    
+    .toggle input:checked + .toggle-slider {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+    }
+    
+    .toggle input:checked + .toggle-slider::before {
+      transform: translateX(20px);
+    }
+    
+    /* Select */
+    select {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      font-family: inherit;
+    }
+    
+    select:focus {
+      border-color: #818cf8;
+    }
+    
+    select option {
+      background: #1c1c28;
+    }
+    
+    /* Shortcuts section */
+    .shortcut-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    
+    .shortcut-row:last-child {
+      border-bottom: none;
+    }
+    
+    .shortcut-keys {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .key {
+      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #818cf8;
+      font-family: monospace;
+    }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    
+    .footer a {
+      color: #818cf8;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .footer a:hover {
+      text-decoration: underline;
+    }
+    
+    .footer p {
+      color: #334155;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+    
+    /* Saved indicator */
+    .saved-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      background: #1e1b4b;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 10px;
+      color: #a5b4fc;
+      font-size: 12px;
+      font-weight: 600;
+      transform: translateY(-20px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 100;
+    }
+    
+    .saved-indicator.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="saved-indicator" id="savedIndicator">✓ Settings saved</div>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="white">
+          <path d="M5.5 4.866a1.5 1.5 0 0 1 2.227-1.313l13.5 7.42a1.5 1.5 0 0 1 0 2.626l-13.5 7.42A1.5 1.5 0 0 1 5.5 19.706V4.866Z" />
+        </svg>
+      </div>
+      <h1>Show Settings <span>v1.0.0</span></h1>
+    </div>
+
+    <!-- Floating Dock Settings -->
+    <div class="section">
+      <div class="section-title">Floating Dock</div>
+      
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Enable Show Pill</div>
+          <div class="setting-desc">Show floating dock on all web pages</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="enableDock" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Default position</div>
+          <div class="setting-desc">Where the dock appears on new pages</div>
+        </div>
+        <select id="dockPosition">
+          <option value="bottom-left">Bottom Left</option>
+          <option value="bottom-right">Bottom Right</option>
+          <option value="top-left">Top Left</option>
+          <option value="top-right">Top Right</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Dock opacity</div>
+          <div class="setting-desc">Transparency when not hovered</div>
+        </div>
+        <select id="dockOpacity">
+          <option value="100">100% (Solid)</option>
+          <option value="80">80%</option>
+          <option value="60">60%</option>
+          <option value="40">40%</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Reset dock position</div>
+          <div class="setting-desc">Move dock back to default location</div>
+        </div>
+        <button id="resetDockPosition" style="padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.3); background: rgba(99, 102, 241, 0.1); color: #a5b4fc; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;">
+          Reset Position
+        </button>
+      </div>
+    </div>
+
+    <!-- Capture Settings -->
+    <div class="section">
+      <div class="section-title">Capture</div>
+      
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Screenshot format</div>
+          <div class="setting-desc">Image format for screenshots</div>
+        </div>
+        <select id="captureFormat">
+          <option value="png">PNG</option>
+          <option value="jpeg">JPEG</option>
+          <option value="webp">WebP</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Image quality</div>
+          <div class="setting-desc">Quality for JPEG/WebP (doesn't affect PNG)</div>
+        </div>
+        <select id="captureQuality">
+          <option value="100">Maximum (100%)</option>
+          <option value="90">High (90%)</option>
+          <option value="75">Medium (75%)</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Copy to clipboard</div>
+          <div class="setting-desc">Automatically copy screenshots to clipboard</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="copyToClipboard" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Auto-download captures</div>
+          <div class="setting-desc">Automatically download screenshots when captured</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="autoDownload" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Recording Settings -->
+    <div class="section">
+      <div class="section-title">Recording</div>
+      
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Recording format</div>
+          <div class="setting-desc">Video container format</div>
+        </div>
+        <select id="recordingFormat">
+          <option value="webm">WebM (VP9)</option>
+          <option value="webm-h264">WebM (H.264)</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Video quality</div>
+          <div class="setting-desc">Higher quality uses more storage</div>
+        </div>
+        <select id="videoBitrate">
+          <option value="5000000">High (5 Mbps)</option>
+          <option value="3000000">Medium (3 Mbps)</option>
+          <option value="1500000">Low (1.5 Mbps)</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Include audio</div>
+          <div class="setting-desc">Capture system audio in recordings</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="includeAudio" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="section">
+      <div class="section-title">Notifications</div>
+      
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Show notifications</div>
+          <div class="setting-desc">Desktop notifications after capture/recording</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="showNotifications" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Keyboard Shortcuts -->
+    <div class="section">
+      <div class="section-title">Keyboard Shortcuts</div>
+      
+      <div class="shortcut-row">
+        <div class="setting-info">
+          <div class="setting-label">Quick capture</div>
+          <div class="setting-desc">Take a full-page screenshot</div>
+        </div>
+        <div class="shortcut-keys">
+          <span class="key">⌘</span>
+          <span class="key">⇧</span>
+          <span class="key">S</span>
+        </div>
+      </div>
+
+      <div class="shortcut-row">
+        <div class="setting-info">
+          <div class="setting-label">Start / stop recording</div>
+          <div class="setting-desc">Toggle screen recording</div>
+        </div>
+        <div class="shortcut-keys">
+          <span class="key">⌘</span>
+          <span class="key">⇧</span>
+          <span class="key">R</span>
+        </div>
+      </div>
+
+      <div class="setting-desc" style="margin-top: 12px; font-size: 11px;">
+        Shortcuts can be changed in <a href="#" id="chromeShortcuts" style="color: #818cf8;">chrome://extensions/shortcuts</a>
+      </div>
+    </div>
+
+    <!-- Data -->
+    <div class="section">
+      <div class="section-title">Data</div>
+      
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Clear all captures</div>
+          <div class="setting-desc">Remove all saved screenshots and recordings</div>
+        </div>
+        <button id="clearData" style="padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.1); color: #fca5a5; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;">
+          Clear All
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <a href="https://getshowapp.com" target="_blank">Open Show App →</a>
+      <p>© 2026 Show. All rights reserved.</p>
+    </div>
+  </div>
+
+  <script>
+    // ─── Load Settings ──────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { settings = {} } = await chrome.storage.local.get('settings');
+      
+      // Floating Dock settings
+      document.getElementById('enableDock').checked = settings.enableDock !== false;
+      document.getElementById('dockPosition').value = settings.dockPosition || 'bottom-left';
+      document.getElementById('dockOpacity').value = String(settings.dockOpacity || 100);
+      
+      // Capture settings
+      document.getElementById('captureFormat').value = settings.captureFormat || 'png';
+      document.getElementById('captureQuality').value = String(settings.captureQuality || 100);
+      document.getElementById('copyToClipboard').checked = settings.copyToClipboard !== false;
+      document.getElementById('autoDownload').checked = settings.autoDownload || false;
+      
+      // Recording settings
+      document.getElementById('recordingFormat').value = settings.recordingFormat || 'webm';
+      document.getElementById('videoBitrate').value = String(settings.videoBitrate || 3000000);
+      document.getElementById('includeAudio').checked = settings.includeAudio !== false;
+      
+      // Notifications
+      document.getElementById('showNotifications').checked = settings.showNotifications !== false;
+    });
+
+    // ─── Auto-save on change ────────────────────────
+    const inputs = document.querySelectorAll('select, input[type="checkbox"]');
+    inputs.forEach(input => {
+      input.addEventListener('change', saveSettings);
+    });
+
+    async function saveSettings() {
+      const settings = {
+        // Floating Dock
+        enableDock: document.getElementById('enableDock').checked,
+        dockPosition: document.getElementById('dockPosition').value,
+        dockOpacity: parseInt(document.getElementById('dockOpacity').value),
+        
+        // Capture
+        captureFormat: document.getElementById('captureFormat').value,
+        captureQuality: parseInt(document.getElementById('captureQuality').value),
+        copyToClipboard: document.getElementById('copyToClipboard').checked,
+        autoDownload: document.getElementById('autoDownload').checked,
+        
+        // Recording
+        recordingFormat: document.getElementById('recordingFormat').value,
+        videoBitrate: parseInt(document.getElementById('videoBitrate').value),
+        includeAudio: document.getElementById('includeAudio').checked,
+        
+        // Notifications
+        showNotifications: document.getElementById('showNotifications').checked,
+      };
+      
+      await chrome.storage.local.set({ settings });
+      
+      // Notify content scripts of settings change
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tab?.id) {
+          chrome.tabs.sendMessage(tab.id, { action: 'settingsUpdated', settings });
+        }
+      } catch (e) {
+        // Tab might not have content script
+      }
+      
+      // Show saved indicator
+      const indicator = document.getElementById('savedIndicator');
+      indicator.classList.add('show');
+      setTimeout(() => indicator.classList.remove('show'), 1500);
+    }
+
+    // ─── Reset dock position ────────────────────────
+    document.getElementById('resetDockPosition').addEventListener('click', async () => {
+      await chrome.storage.local.remove('showPillPosition');
+      
+      // Notify content scripts
+      try {
+        const tabs = await chrome.tabs.query({});
+        tabs.forEach(tab => {
+          if (tab.id) {
+            chrome.tabs.sendMessage(tab.id, { action: 'resetDockPosition' }).catch(() => {});
+          }
+        });
+      } catch (e) {}
+      
+      const indicator = document.getElementById('savedIndicator');
+      indicator.textContent = '✓ Dock position reset';
+      indicator.classList.add('show');
+      setTimeout(() => {
+        indicator.classList.remove('show');
+        indicator.textContent = '✓ Settings saved';
+      }, 2000);
+    });
+
+    // ─── Chrome shortcuts link ──────────────────────
+    document.getElementById('chromeShortcuts').addEventListener('click', (e) => {
+      e.preventDefault();
+      chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+    });
+
+    // ─── Clear data ─────────────────────────────────
+    document.getElementById('clearData').addEventListener('click', async () => {
+      if (confirm('Are you sure you want to delete all captures? This cannot be undone.')) {
+        await chrome.storage.local.remove('captures');
+        const indicator = document.getElementById('savedIndicator');
+        indicator.textContent = '✓ All captures cleared';
+        indicator.classList.add('show');
+        setTimeout(() => {
+          indicator.classList.remove('show');
+          indicator.textContent = '✓ Settings saved';
+        }, 2000);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Show Extension – Store Assets Generator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: white;
+      padding: 40px;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      color: #fff;
+    }
+    
+    .instructions {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 40px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .instructions h2 {
+      margin-bottom: 10px;
+      color: #a78bfa;
+    }
+    
+    .instructions ol {
+      padding-left: 20px;
+    }
+    
+    .instructions li {
+      margin: 8px 0;
+      color: #ccc;
+    }
+    
+    .asset-section {
+      margin-bottom: 60px;
+    }
+    
+    .asset-label {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: #a78bfa;
+    }
+    
+    .asset-container {
+      display: flex;
+      justify-content: center;
+    }
+    
+    /* ─── Official Show Icon ─── */
+    .show-icon {
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #3b27b2 0%, #8227b2 50%, #b61cc9 100%);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    
+    .show-icon-play {
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-color: transparent transparent transparent white;
+    }
+    
+    /* ─── Store Icon 128x128 ─── */
+    .store-icon-container {
+      width: 128px;
+      height: 128px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+    }
+    
+    .store-icon {
+      width: 128px;
+      height: 128px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #3b27b2 0%, #8227b2 50%, #b61cc9 100%);
+      box-shadow: none;
+    }
+    
+    .store-icon .store-icon-play {
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 24px 0 24px 40px;
+      border-color: transparent transparent transparent white;
+      margin-left: 8px;
+    }
+    
+    /* ─── Screenshot 1280x800 ─── */
+    .screenshot {
+      width: 1280px;
+      height: 800px;
+      background: linear-gradient(135deg, #3b27b2 0%, #8227b2 50%, #b61cc9 100%);
+      border-radius: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .screenshot::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%);
+    }
+    
+    .screenshot-content {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 60px 80px;
+      gap: 60px;
+    }
+    
+    .screenshot-left {
+      flex: 1;
+    }
+    
+    .screenshot-logo {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    
+    .screenshot-logo .show-icon {
+      width: 64px;
+      height: 64px;
+    }
+    
+    .screenshot-logo .show-icon-play {
+      border-width: 12px 0 12px 20px;
+      margin-left: 4px;
+    }
+    
+    .screenshot-logo-text {
+      font-size: 48px;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    
+    .screenshot h2 {
+      font-size: 56px;
+      font-weight: 700;
+      color: white;
+      line-height: 1.2;
+      margin-bottom: 24px;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    
+    .screenshot p {
+      font-size: 24px;
+      color: rgba(255,255,255,0.9);
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+    
+    .screenshot-features {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    
+    .screenshot-feature {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    .screenshot-feature svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .screenshot-right {
+      flex: 0 0 500px;
+    }
+    
+    .screenshot-mockup {
+      background: #1a1a2e;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.4);
+    }
+    
+    .mockup-browser {
+      background: #2d2d44;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .mockup-toolbar {
+      height: 36px;
+      background: #3d3d5c;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+    }
+    
+    .mockup-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    
+    .mockup-dot.red { background: #ff5f57; }
+    .mockup-dot.yellow { background: #febc2e; }
+    .mockup-dot.green { background: #28c840; }
+    
+    .mockup-content {
+      height: 320px;
+      background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .mockup-pill {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: white;
+      border-radius: 16px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    
+    .mockup-pill-label {
+      font-size: 8px;
+      font-weight: 600;
+      color: #8227b2;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .mockup-pill-label .show-icon {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .mockup-pill-label .show-icon-play {
+      border-width: 3px 0 3px 5px;
+      margin-left: 1px;
+    }
+    
+    .mockup-pill-buttons {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .mockup-pill-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .mockup-pill-btn.primary {
+      background: linear-gradient(135deg, #3b27b2, #8227b2, #b61cc9);
+    }
+    
+    .mockup-pill-btn svg {
+      width: 16px;
+      height: 16px;
+      color: #666;
+    }
+    
+    .mockup-pill-btn.primary svg {
+      color: white;
+    }
+    
+    /* ─── Small Promo Tile 440x280 ─── */
+    .small-tile {
+      width: 440px;
+      height: 280px;
+      background: linear-gradient(135deg, #3b27b2 0%, #8227b2 50%, #b61cc9 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+    }
+    
+    .small-tile::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    }
+    
+    .small-tile .show-icon {
+      width: 72px;
+      height: 72px;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(135deg, #3b27b2 0%, #8227b2 50%, #b61cc9 100%);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    
+    .small-tile .show-icon-play {
+      border-width: 14px 0 14px 24px;
+      margin-left: 6px;
+    }
+    
+    .small-tile h3 {
+      font-size: 32px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .small-tile p {
+      font-size: 16px;
+      color: rgba(255,255,255,0.9);
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* ─── Marquee Promo Tile 1400x560 ─── */
+    .marquee-tile {
+      width: 1400px;
+      height: 560px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 50%, #1a1a2e 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      padding: 0 100px;
+    }
+    
+    .marquee-tile::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(ellipse at 30% 50%, rgba(59, 39, 178, 0.4) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 50%, rgba(182, 28, 201, 0.3) 0%, transparent 50%);
+    }
+    
+    .marquee-left {
+      flex: 1;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .marquee-logo {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    
+    .marquee-logo .show-icon {
+      width: 80px;
+      height: 80px;
+    }
+    
+    .marquee-logo .show-icon-play {
+      border-width: 15px 0 15px 25px;
+      margin-left: 5px;
+    }
+    
+    .marquee-logo-text {
+      font-size: 56px;
+      font-weight: 700;
+      color: white;
+    }
+    
+    .marquee-tile h2 {
+      font-size: 48px;
+      font-weight: 700;
+      color: white;
+      line-height: 1.3;
+      margin-bottom: 24px;
+    }
+    
+    .marquee-tile h2 span {
+      background: linear-gradient(90deg, #8227b2, #b61cc9, #f093fb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .marquee-features {
+      display: flex;
+      gap: 32px;
+    }
+    
+    .marquee-feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: rgba(255,255,255,0.8);
+      font-size: 18px;
+    }
+    
+    .marquee-feature svg {
+      width: 24px;
+      height: 24px;
+      color: #b61cc9;
+    }
+    
+    .marquee-right {
+      flex: 0 0 550px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .marquee-mockup {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      padding: 32px;
+    }
+    
+    .marquee-browser {
+      background: #1a1a2e;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+    }
+    
+    .marquee-browser-bar {
+      height: 40px;
+      background: #2d2d44;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 8px;
+    }
+    
+    .marquee-browser-content {
+      height: 280px;
+      background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+      position: relative;
+    }
+    
+    .marquee-floating-pill {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      background: white;
+      border-radius: 20px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    }
+    
+    .marquee-pill-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #8227b2;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .marquee-pill-label .show-icon {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .marquee-pill-label .show-icon-play {
+      border-width: 4px 0 4px 7px;
+      margin-left: 2px;
+    }
+    
+    .marquee-pill-buttons {
+      display: flex;
+      gap: 6px;
+    }
+    
+    .marquee-pill-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .marquee-pill-btn.primary {
+      background: linear-gradient(135deg, #3b27b2, #8227b2, #b61cc9);
+    }
+    
+    .marquee-pill-btn svg {
+      width: 20px;
+      height: 20px;
+      color: #666;
+    }
+    
+    .marquee-pill-btn.primary svg {
+      color: white;
+    }
+    
+    /* Download buttons */
+    .download-btn {
+      display: block;
+      margin: 20px auto;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #3b27b2, #8227b2, #b61cc9);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(130, 39, 178, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <h1>Show Extension – Chrome Web Store Assets</h1>
+  
+  <div class="instructions">
+    <h2>How to Save These Assets</h2>
+    <ol>
+      <li>Right-click on each asset and select "Inspect" to open DevTools</li>
+      <li>In DevTools, right-click the element and select "Capture node screenshot"</li>
+      <li>Or use the download buttons below each asset (uses html2canvas)</li>
+      <li>Upload the saved images to the Chrome Web Store Developer Dashboard</li>
+    </ol>
+  </div>
+
+  <!-- Store Icon 128x128 -->
+  <div class="asset-section">
+    <div class="asset-label">Store Icon (128×128) – Required</div>
+    <div class="asset-container">
+      <div class="store-icon-container" id="storeIcon">
+        <div class="store-icon">
+          <div class="store-icon-play"></div>
+        </div>
+      </div>
+    </div>
+    <button class="download-btn" onclick="downloadAsset('storeIcon', 'show-store-icon-128x128.png')">Download Store Icon</button>
+  </div>
+
+  <!-- Screenshot 1280x800 -->
+  <div class="asset-section">
+    <div class="asset-label">Screenshot (1280×800) – Required</div>
+    <div class="asset-container">
+      <div class="screenshot" id="screenshot1">
+        <div class="screenshot-content">
+          <div class="screenshot-left">
+            <div class="screenshot-logo">
+              <div class="show-icon">
+                <div class="show-icon-play"></div>
+              </div>
+              <span class="screenshot-logo-text">Show</span>
+            </div>
+            <h2>Capture. Record.<br>Share Instantly.</h2>
+            <p>The fastest way to capture screenshots and record your screen. Works on any website with a single click.</p>
+            <div class="screenshot-features">
+              <div class="screenshot-feature">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
+                </svg>
+                Screenshots
+              </div>
+              <div class="screenshot-feature">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polygon points="10,8 16,12 10,16" fill="currentColor"/>
+                </svg>
+                Screen Recording
+              </div>
+              <div class="screenshot-feature">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Copy to Clipboard
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-right">
+            <div class="screenshot-mockup">
+              <div class="mockup-browser">
+                <div class="mockup-toolbar">
+                  <div class="mockup-dot red"></div>
+                  <div class="mockup-dot yellow"></div>
+                  <div class="mockup-dot green"></div>
+                </div>
+                <div class="mockup-content">
+                  <div class="mockup-pill">
+                    <div class="mockup-pill-label">
+                      <div class="show-icon">
+                        <div class="show-icon-play"></div>
+                      </div>
+                      SHOW PILL
+                    </div>
+                    <div class="mockup-pill-buttons">
+                      <div class="mockup-pill-btn">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                          <circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/>
+                          <circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 18 18"/>
+                        </svg>
+                      </div>
+                      <div class="mockup-pill-btn primary">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                          <rect x="2" y="3" width="20" height="14" rx="2"/>
+                          <line x1="8" y1="21" x2="16" y2="21"/>
+                          <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                      </div>
+                      <div class="mockup-pill-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <polyline points="15 3 21 3 21 9"/>
+                          <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="download-btn" onclick="downloadAsset('screenshot1', 'show-screenshot-1280x800.png')">Download Screenshot</button>
+  </div>
+
+  <!-- Small Promo Tile 440x280 -->
+  <div class="asset-section">
+    <div class="asset-label">Small Promo Tile (440×280)</div>
+    <div class="asset-container">
+      <div class="small-tile" id="smallTile">
+        <div class="show-icon">
+          <div class="show-icon-play"></div>
+        </div>
+        <h3>Show</h3>
+        <p>Capture & Record Your Screen</p>
+      </div>
+    </div>
+    <button class="download-btn" onclick="downloadAsset('smallTile', 'show-small-promo-440x280.png')">Download Small Tile</button>
+  </div>
+
+  <!-- Marquee Promo Tile 1400x560 -->
+  <div class="asset-section">
+    <div class="asset-label">Marquee Promo Tile (1400×560)</div>
+    <div class="asset-container">
+      <div class="marquee-tile" id="marqueeTile">
+        <div class="marquee-left">
+          <div class="marquee-logo">
+            <div class="show-icon">
+              <div class="show-icon-play"></div>
+            </div>
+            <span class="marquee-logo-text">Show</span>
+          </div>
+          <h2>The <span>Fastest</span> Way to<br>Capture Your Screen</h2>
+          <div class="marquee-features">
+            <div class="marquee-feature">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+              One-Click Capture
+            </div>
+            <div class="marquee-feature">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+              Screen Recording
+            </div>
+            <div class="marquee-feature">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+              Works Everywhere
+            </div>
+          </div>
+        </div>
+        <div class="marquee-right">
+          <div class="marquee-mockup">
+            <div class="marquee-browser">
+              <div class="marquee-browser-bar">
+                <div class="mockup-dot red"></div>
+                <div class="mockup-dot yellow"></div>
+                <div class="mockup-dot green"></div>
+              </div>
+              <div class="marquee-browser-content">
+                <div class="marquee-floating-pill">
+                  <div class="marquee-pill-label">
+                    <div class="show-icon">
+                      <div class="show-icon-play"></div>
+                    </div>
+                    SHOW PILL
+                  </div>
+                  <div class="marquee-pill-buttons">
+                    <div class="marquee-pill-btn">
+                      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/>
+                        <circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 18 18"/>
+                      </svg>
+                    </div>
+                    <div class="marquee-pill-btn primary">
+                      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                      </svg>
+                    </div>
+                    <div class="marquee-pill-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="15 3 21 3 21 9"/>
+                        <line x1="10" y1="14" x2="21" y2="3"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="download-btn" onclick="downloadAsset('marqueeTile', 'show-marquee-1400x560.png')">Download Marquee Tile</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    // Asset dimensions
+    const assetDimensions = {
+      storeIcon: { width: 128, height: 128 },
+      screenshot1: { width: 1280, height: 800 },
+      smallTile: { width: 440, height: 280 },
+      marqueeTile: { width: 1400, height: 560 }
+    };
+
+    async function downloadAsset(elementId, filename) {
+      const element = document.getElementById(elementId);
+      const btn = event.target;
+      btn.textContent = 'Generating...';
+      btn.disabled = true;
+      
+      const dims = assetDimensions[elementId];
+      const isStoreIcon = elementId === 'storeIcon';
+      
+      try {
+        // Capture at scale 1 to get exact pixel dimensions
+        const canvas = await html2canvas(element, {
+          scale: 1,
+          width: dims.width,
+          height: dims.height,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: isStoreIcon ? null : '#1a1a2e',
+          windowWidth: dims.width,
+          windowHeight: dims.height,
+        });
+        
+        // Ensure exact dimensions and no alpha by redrawing to a new canvas
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = dims.width;
+        finalCanvas.height = dims.height;
+        const ctx = finalCanvas.getContext('2d');
+        // Fill with solid background (skip for store icon to keep transparent)
+        if (!isStoreIcon) {
+          ctx.fillStyle = '#1a1a2e';
+          ctx.fillRect(0, 0, dims.width, dims.height);
+        }
+        ctx.drawImage(canvas, 0, 0, dims.width, dims.height);
+        
+        // Export - PNG for store icon, JPEG for others
+        const link = document.createElement('a');
+        if (isStoreIcon) {
+          link.download = filename;
+          link.href = finalCanvas.toDataURL('image/png');
+        } else {
+          link.download = filename.replace('.png', '.jpg');
+          link.href = finalCanvas.toDataURL('image/jpeg', 0.95);
+        }
+        link.click();
+        
+        btn.textContent = `Downloaded! (${dims.width}×${dims.height})`;
+        const btnLabels = {
+          storeIcon: 'Store Icon',
+          screenshot1: 'Screenshot',
+          smallTile: 'Small Tile',
+          marqueeTile: 'Marquee Tile'
+        };
+        setTimeout(() => {
+          btn.textContent = 'Download ' + btnLabels[elementId];
+          btn.disabled = false;
+        }, 2000);
+      } catch (err) {
+        console.error('Download failed:', err);
+        btn.textContent = 'Failed - Use DevTools instead';
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

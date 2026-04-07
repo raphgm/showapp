@@ -1,0 +1,89 @@
+<!-- 
+  Icon generator: open this file in a browser, right-click each canvas, and "Save image as" 
+  to create icons at 16, 32, 48, and 128px sizes.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Show Icon Generator</title>
+  <style>
+    body { font-family: sans-serif; background: #1a1a2e; color: white; padding: 40px; }
+    .icons { display: flex; gap: 32px; align-items: end; flex-wrap: wrap; }
+    .icon-wrap { text-align: center; }
+    .icon-wrap p { margin-top: 8px; font-size: 12px; color: #888; }
+    canvas { border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; }
+    button { margin-top: 24px; padding: 12px 24px; background: #6366f1; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    button:hover { background: #4f46e5; }
+  </style>
+</head>
+<body>
+  <h1>Show Extension – Icon Generator</h1>
+  <p>Click "Generate & Download" to create all icon sizes.</p>
+  <div class="icons" id="icons"></div>
+  <button onclick="generateAndDownload()">Generate & Download All</button>
+
+  <script>
+    const sizes = [16, 32, 48, 128];
+
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+      canvas.width = size;
+      canvas.height = size;
+
+      // Gradient background circle
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#3b27b2');
+      gradient.addColorStop(0.5, '#8227b2');
+      gradient.addColorStop(1, '#b61cc9');
+
+      // Circle
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // Play icon (triangle)
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+
+      const scale = size / 128;
+      const cx = size / 2 + (3 * scale);
+      const cy = size / 2;
+      const triSize = size * 0.35;
+
+      ctx.moveTo(cx - triSize * 0.4, cy - triSize * 0.5);
+      ctx.lineTo(cx + triSize * 0.55, cy);
+      ctx.lineTo(cx - triSize * 0.4, cy + triSize * 0.5);
+      ctx.closePath();
+      ctx.fill();
+
+      return canvas;
+    }
+
+    // Generate preview
+    const container = document.getElementById('icons');
+    sizes.forEach(size => {
+      const wrap = document.createElement('div');
+      wrap.className = 'icon-wrap';
+      const canvas = document.createElement('canvas');
+      drawIcon(canvas, size);
+      wrap.appendChild(canvas);
+      const label = document.createElement('p');
+      label.textContent = `icon${size}.png`;
+      wrap.appendChild(label);
+      container.appendChild(wrap);
+    });
+
+    function generateAndDownload() {
+      sizes.forEach(size => {
+        const canvas = document.createElement('canvas');
+        drawIcon(canvas, size);
+        const link = document.createElement('a');
+        link.download = `icon${size}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
