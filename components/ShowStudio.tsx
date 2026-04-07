@@ -179,8 +179,11 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
   // --- Production Logic ---
   const stopProduction = useCallback(() => {
     if (renderLoopRef.current) clearInterval(renderLoopRef.current);
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== 'inactive') {
+      // requestData() flushes the final partial chunk before stop() fires onstop
+      if (recorder.state === 'recording') recorder.requestData();
+      recorder.stop();
     }
     setIsProducing(false);
   }, []);
@@ -302,12 +305,21 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
       mediaRecorderRef.current = recorder;
       recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunksRef.current.push(e.data); };
       recorder.onstop = () => {
-        const blob = new Blob(recordedChunksRef.current, { type: mimeType });
+        const chunks = recordedChunksRef.current;
+        if (chunks.length === 0) {
+          addToast('Nothing was recorded — try again', 'error');
+          return;
+        }
+        const blob = new Blob(chunks, { type: mimeType });
+        if (blob.size === 0) {
+          addToast('Recording was empty — try again', 'error');
+          return;
+        }
         const videoUrl = URL.createObjectURL(blob);
         const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
         const filename = `show-studio-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
 
-        // Always trigger download so the recording is never lost
+        // Trigger download
         const a = document.createElement('a');
         a.href = videoUrl;
         a.download = filename;
@@ -315,7 +327,7 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
         a.click();
         document.body.removeChild(a);
 
-        // Also save to library if user is signed in
+        // Save to library if signed in
         if (firebaseUser?.uid) {
           const newVideo: VideoType = {
             id: Math.random().toString(36).substring(7),
@@ -333,7 +345,8 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
 
         addToast('Recording saved — check your Downloads folder!', 'success');
       };
-      recorder.start();
+      // timeslice=1000ms: flush data every second so chunks are never lost
+      recorder.start(1000);
       setIsProducing(true);
     } catch (err) {
       console.error('MediaRecorder setup failed:', err);
