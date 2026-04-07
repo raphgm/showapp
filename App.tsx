@@ -565,7 +565,7 @@ const App: React.FC = () => {
           return <Meetings user={user} snippets={snippets} coverImage={activeCoverImage} activeMeeting={activeMeeting} setActiveMeeting={setActiveMeeting} isInstantLoading={isInstantLoading} onInstantRoom={handleInstantMeeting} />;
         }
         return <StreamStudio onEnterStudio={handleInstantMeeting} />;
-      case AppRoute.SHOW_STUDIO: return <ShowStudioPage onClose={() => setCurrentRoute(AppRoute.HOME)} />;
+      case AppRoute.SHOW_STUDIO: return <ShowStudioPage onClose={() => setCurrentRoute(AppRoute.HOME)} onSave={handleSaveVideo} />;
       case AppRoute.CHAT: return <Chat user={user} workspace={workspace} coverImage={activeCoverImage} />;
       case AppRoute.CAPTURES:
       case AppRoute.SNAP_STUDIO: return <SnapStudio captures={captures} onEnterStudioWorkspace={() => setIsStudioWorkspaceOpen(true)} onQuickSnap={() => handleScreenshot('region')} onDeleteCapture={handleDeleteCapture} onEditCapture={(capture) => setActiveCaptureForEditing(capture)} onOpenProfileEditor={() => setIsProfilePhotoEditorOpen(true)} coverImage={activeCoverImage} vaultStatus={vaultStatus} />;

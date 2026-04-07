@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   X, Share2, Loader2, Layers, Monitor, Grid3x3, Users, Code2, Presentation,
   Radio, Settings, Video, Mic, MicOff, Copy, VideoOff,
-  Maximize2, ArrowRight, Zap
+  Maximize2, ArrowRight, Zap, Play, Save, CheckCircle2
 } from 'lucide-react';
 import { useVirtualBackground } from '../services/useVirtualBackground';
 import {
@@ -14,10 +14,12 @@ import {
 import { useToast } from './ToastProvider';
 import { useAuth } from '../services/AuthContext';
 import { saveVideos, loadVideos } from '../services/persistence';
+import { generateVideoInsightsFromFrames } from '../services/geminiService';
 import type { Video as VideoType } from '../types';
 
 interface ShowStudioProps {
   onClose: () => void;
+  onSave?: (video: VideoType) => void;
 }
 
 type ProductionMode = 'standard' | 'interview' | 'codelab' | 'presenter';
@@ -47,7 +49,7 @@ const backgroundOptions: BackgroundOption[] = [
   { id: 'gradient-dark', label: 'Dark', type: 'gradient', value: 'linear-gradient(135deg, #232526 0%, #414345 100%)', preview: 'bg-gradient-to-br from-slate-800 to-slate-600' },
 ];
 
-const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
+const ShowStudio: React.FC<ShowStudioProps> = ({ onClose, onSave }) => {
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const [selectedMode, setSelectedMode] = useState<ProductionMode>('standard');
@@ -58,6 +60,10 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
   const [isMicOff, setIsMicOff] = useState(false);
   const [selectedBackground, setSelectedBackground] = useState<BackgroundOption>(backgroundOptions[0]);
   const [pendingJoinRequests, setPendingJoinRequests] = useState<JoinRequest[]>([]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [isSavingProduction, setIsSavingProduction] = useState(false);
+  const recordingTimerRef = useRef<number | null>(null);
 
   // Dragging state
   const [isDraggingCircle, setIsDraggingCircle] = useState(false);
@@ -179,9 +185,9 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
   // --- Production Logic ---
   const stopProduction = useCallback(() => {
     if (renderLoopRef.current) clearInterval(renderLoopRef.current);
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state !== 'inactive') {
-      // requestData() flushes the final partial chunk before stop() fires onstop
       if (recorder.state === 'recording') recorder.requestData();
       recorder.stop();
     }
@@ -289,19 +295,19 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
     renderLoopRef.current = window.setInterval(draw, 33);
 
     // Media Recorder Setup
-    const stream = canvas.captureStream(30);
+    const captureStream = canvas.captureStream(30);
     if (cameraStreamRef.current) {
-      cameraStreamRef.current.getAudioTracks().forEach(track => stream.addTrack(track));
+      cameraStreamRef.current.getAudioTracks().forEach(track => captureStream.addTrack(track));
     }
 
     let mimeType = 'video/webm';
     if (typeof MediaRecorder !== 'undefined') {
-      if (MediaRecorder.isTypeSupported('video/mp4')) mimeType = 'video/mp4';
-      else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) mimeType = 'video/webm;codecs=vp9';
+      if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) mimeType = 'video/webm;codecs=vp9';
+      else if (MediaRecorder.isTypeSupported('video/webm')) mimeType = 'video/webm';
     }
 
     try {
-      const recorder = new MediaRecorder(stream, { mimeType });
+      const recorder = new MediaRecorder(captureStream, { mimeType, videoBitsPerSecond: 5_000_000 });
       mediaRecorderRef.current = recorder;
       recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunksRef.current.push(e.data); };
       recorder.onstop = () => {
@@ -315,43 +321,114 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
           addToast('Recording was empty — try again', 'error');
           return;
         }
-        const videoUrl = URL.createObjectURL(blob);
-        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
-        const filename = `show-studio-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
-
-        // Trigger download
-        const a = document.createElement('a');
-        a.href = videoUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        // Save to library if signed in
-        if (firebaseUser?.uid) {
-          const newVideo: VideoType = {
-            id: Math.random().toString(36).substring(7),
-            title: `Studio Recording ${new Date().toLocaleTimeString()}`,
-            description: `Recorded in Show Studio`,
-            videoUrl,
-            thumbnailUrl: '',
-            duration: '0:00',
-            createdAt: new Date().toISOString(),
-            author: firebaseUser.displayName || 'Creator',
-            views: 0
-          };
-          saveVideos(firebaseUser.uid, [newVideo, ...loadVideos(firebaseUser.uid)]);
-        }
-
-        addToast('Recording saved — check your Downloads folder!', 'success');
+        // Set preview URL — user can review then click "Save Production"
+        setPreviewUrl(URL.createObjectURL(blob));
       };
-      // timeslice=1000ms: flush data every second so chunks are never lost
+      // timeslice=1000ms: flush a chunk every second so data is never lost
       recorder.start(1000);
+      setPreviewUrl(null);
+      setRecordingDuration(0);
+      recordingTimerRef.current = window.setInterval(() => setRecordingDuration(d => d + 1), 1000);
       setIsProducing(true);
     } catch (err) {
       console.error('MediaRecorder setup failed:', err);
+      addToast('Could not start recording', 'error');
     }
-  }, [firebaseUser, addToast, vbCanvasRef]);
+  }, [addToast, vbCanvasRef]);
+
+  const formatDuration = (secs: number) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  const handleSaveProduction = useCallback(async () => {
+    if (!previewUrl) return;
+    setIsSavingProduction(true);
+
+    // Extract frames for AI analysis
+    const extractFrames = (url: string, count: number): Promise<string[]> =>
+      new Promise((resolve) => {
+        const vid = document.createElement('video');
+        vid.src = url;
+        vid.muted = true;
+        const cvs = document.createElement('canvas');
+        const ctx = cvs.getContext('2d');
+        const frames: string[] = [];
+        vid.onloadedmetadata = () => {
+          cvs.width = vid.videoWidth || 1280;
+          cvs.height = vid.videoHeight || 720;
+          const duration = vid.duration;
+          if (!duration || duration === Infinity) { resolve([]); return; }
+          let done = 0;
+          vid.onseeked = () => {
+            if (ctx) { ctx.drawImage(vid, 0, 0, cvs.width, cvs.height); frames.push(cvs.toDataURL('image/jpeg')); }
+            done++;
+            if (done >= count) { vid.src = ''; resolve(frames); }
+            else { const t = (duration / (count + 1)) * (done + 1); if (t <= duration) vid.currentTime = t; else { vid.src = ''; resolve(frames); } }
+          };
+          vid.currentTime = duration / (count + 1);
+        };
+        vid.onerror = () => resolve([]);
+      });
+
+    try {
+      const frames = await extractFrames(previewUrl, 5);
+      let insights: { suggestedTitle?: string; summary?: string; transcript?: string; chapters?: any[] } | null = null;
+      if (frames.length > 0) {
+        insights = await generateVideoInsightsFromFrames(frames, 'Analyze these frames to suggest a concise title, summary, transcript, and chapters with timestamps.');
+      }
+
+      const newVideo: VideoType = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: insights?.suggestedTitle || `Show Studio — ${new Date().toLocaleDateString()}`,
+        description: insights?.summary || 'Recorded in Show Studio.',
+        thumbnailUrl: frames[0] || '',
+        videoUrl: previewUrl,
+        duration: formatDuration(recordingDuration),
+        createdAt: 'Just now',
+        author: firebaseUser?.displayName || 'Me',
+        views: 0,
+        aiSummary: insights?.summary,
+        transcript: insights?.transcript,
+        chapters: insights?.chapters,
+      };
+
+      // Save to persistence
+      if (firebaseUser?.uid) {
+        saveVideos(firebaseUser.uid, [newVideo, ...loadVideos(firebaseUser.uid)]);
+      }
+
+      // Route through onSave → App.tsx → VideoDetail (same as Recorder)
+      if (onSave) {
+        onSave(newVideo);
+      } else {
+        addToast('Production saved to your Library!', 'success');
+      }
+
+      setPreviewUrl(null);
+    } catch (err) {
+      console.error('Save production failed:', err);
+      // Fallback: save raw without AI
+      const fallback: VideoType = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: `Recording ${new Date().toLocaleDateString()}`,
+        description: 'AI analysis failed. Raw recording saved.',
+        thumbnailUrl: '',
+        videoUrl: previewUrl,
+        duration: formatDuration(recordingDuration),
+        createdAt: 'Just now',
+        author: firebaseUser?.displayName || 'Me',
+        views: 0,
+      };
+      if (firebaseUser?.uid) saveVideos(firebaseUser.uid, [fallback, ...loadVideos(firebaseUser.uid)]);
+      if (onSave) onSave(fallback);
+      else addToast('Production saved (without AI analysis)', 'success');
+      setPreviewUrl(null);
+    } finally {
+      setIsSavingProduction(false);
+    }
+  }, [previewUrl, recordingDuration, firebaseUser, onSave, addToast]);
 
   const initCamera = useCallback(async () => {
     try {
@@ -730,6 +807,55 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Post-Production Preview ─── */}
+      {previewUrl && (
+        <div className="absolute inset-0 z-[200] bg-black/90 backdrop-blur-xl flex items-center justify-center p-8 animate-in fade-in duration-300">
+          <div className="w-full max-w-3xl bg-[#18181b] border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="size-8 bg-indigo-500/20 rounded-xl flex items-center justify-center">
+                  <CheckCircle2 className="size-4 text-indigo-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-white">Production Ready</p>
+                  <p className="text-[10px] text-zinc-500 font-medium">Review your recording · {formatDuration(recordingDuration)}</p>
+                </div>
+              </div>
+              <button onClick={() => setPreviewUrl(null)} className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-colors">
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="p-6">
+              <video src={previewUrl} controls className="w-full rounded-2xl bg-black border border-white/5" style={{ maxHeight: 360 }} />
+            </div>
+            <div className="flex items-center gap-3 px-6 pb-6">
+              <button
+                onClick={handleSaveProduction}
+                disabled={isSavingProduction}
+                className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-all disabled:opacity-60"
+              >
+                {isSavingProduction ? (
+                  <><Loader2 className="size-4 animate-spin" /> Analysing &amp; Saving…</>
+                ) : (
+                  <><Save className="size-4" /> Save Production</>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  const a = document.createElement('a');
+                  a.href = previewUrl;
+                  a.download = `show-studio-${new Date().toISOString().replace(/[:.]/g, '-')}.webm`;
+                  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                }}
+                className="flex items-center justify-center gap-2 h-12 px-5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm transition-all"
+              >
+                Download
+              </button>
             </div>
           </div>
         </div>
