@@ -176,15 +176,14 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
     }
   }, [canControl, addToast]);
 
-  // --- Production Logic (Simplified for brevity but functional) ---
+  // --- Production Logic ---
   const stopProduction = useCallback(() => {
     if (renderLoopRef.current) clearInterval(renderLoopRef.current);
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
     setIsProducing(false);
-    addToast('Production saved successfully!', 'success');
-  }, [addToast]);
+  }, []);
 
   const startProduction = useCallback(() => {
     if (!productionCanvasRef.current) return;
@@ -305,6 +304,18 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
       recorder.onstop = () => {
         const blob = new Blob(recordedChunksRef.current, { type: mimeType });
         const videoUrl = URL.createObjectURL(blob);
+        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+        const filename = `show-studio-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
+
+        // Always trigger download so the recording is never lost
+        const a = document.createElement('a');
+        a.href = videoUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // Also save to library if user is signed in
         if (firebaseUser?.uid) {
           const newVideo: VideoType = {
             id: Math.random().toString(36).substring(7),
@@ -319,13 +330,15 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
           };
           saveVideos(firebaseUser.uid, [newVideo, ...loadVideos(firebaseUser.uid)]);
         }
+
+        addToast('Recording saved — check your Downloads folder!', 'success');
       };
       recorder.start();
       setIsProducing(true);
     } catch (err) {
       console.error('MediaRecorder setup failed:', err);
     }
-  }, [firebaseUser, addToast]);
+  }, [firebaseUser, addToast, vbCanvasRef]);
 
   const initCamera = useCallback(async () => {
     try {
@@ -576,6 +589,59 @@ const ShowStudio: React.FC<ShowStudioProps> = ({ onClose }) => {
             </div>
           )}
         </div>
+
+      {/* ─── Pending Guests Panel ─── */}
+      {pendingJoinRequests.length > 0 && (
+        <div className="absolute top-20 right-6 z-50 w-80 bg-[#18181b]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-right-4 duration-300">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <Users className="size-4 text-indigo-400" />
+              <span className="text-xs font-bold text-white uppercase tracking-widest">Waiting to Join</span>
+            </div>
+            <span className="text-[10px] bg-indigo-500/20 text-indigo-400 font-black px-2 py-0.5 rounded-full">
+              {pendingJoinRequests.length}
+            </span>
+          </div>
+          <div className="max-h-64 overflow-y-auto divide-y divide-white/5">
+            {pendingJoinRequests.map(req => (
+              <div key={req.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+                <div className="size-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-black text-white">{req.name.charAt(0).toUpperCase()}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white truncate">{req.name}</p>
+                  {req.email && <p className="text-[10px] text-zinc-500 truncate">{req.email}</p>}
+                  {req.wantsRecording && <p className="text-[10px] text-indigo-400 font-medium">Wants recording</p>}
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => {
+                      setGuestApprovalStatus(ROOM_ID, req.id, true);
+                      removeJoinRequest(ROOM_ID, req.id);
+                      addToast(`${req.name} admitted to the room`, 'success');
+                    }}
+                    className="p-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 rounded-lg transition-colors"
+                    title="Admit"
+                  >
+                    <ArrowRight className="size-3" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setGuestApprovalStatus(ROOM_ID, req.id, false);
+                      removeJoinRequest(ROOM_ID, req.id);
+                      addToast(`${req.name} was denied entry`, 'info');
+                    }}
+                    className="p-1.5 bg-rose-500/20 hover:bg-rose-500/40 text-rose-400 rounded-lg transition-colors"
+                    title="Deny"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ─── Floating Action Bar (Bottom) ─── */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-4">

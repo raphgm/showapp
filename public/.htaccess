@@ -9,3 +9,15 @@
   # Otherwise, redirect everything to index.html for SPA routing
   RewriteRule ^ index.html [QSA,L]
 </IfModule>
+
+# ── Cache control ──────────────────────────────────────────────────────────
+# Hashed assets (JS/CSS) → cache 1 year
+<FilesMatch "\.(js|css)$">
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+
+# index.html + .htaccess → never cache so SPA updates are instant
+<FilesMatch "^(index\.html|\.htaccess)$">
+  Header set Cache-Control "no-store, no-cache, must-revalidate"
+  Header set Pragma "no-cache"
+</FilesMatch>
