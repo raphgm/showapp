@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import DailyMeetingRoom from '../components/DailyMeetingRoom';
 import { useVirtualBackground } from '../services/useVirtualBackground';
 import { setRoomState, subscribeToRoom, deleteRoom, sendChatMessage, subscribeToChatMessages, sendJoinRequest, subscribeToJoinRequests, removeJoinRequest, setGuestApprovalStatus, subscribeToApprovalStatus, syncParticipant, subscribeToParticipants, removeParticipant, type RoomState, type ChatMessageData, type JoinRequest, type ParticipantData } from '../services/firebase';
 import { generateGuestIntroduction } from '../services/geminiService';
@@ -835,6 +836,8 @@ const Meetings: React.FC<MeetingsProps> = ({
 
   // Green Room / Lobby
   const [isInLobby, setIsInLobby] = useState(true);
+  // Whether the Daily.co WebRTC call is active
+  const [isDailyActive, setIsDailyActive] = useState(false);
   const lobbyVideoRef = useRef<HTMLVideoElement>(null);
   const [lobbyStream, setLobbyStream] = useState<MediaStream | null>(null);
   const [faceEnhance, setFaceEnhance] = useState({ smoothSkin: 0, brightness: 0, warmth: 0, eyeBrighten: 0, softFocus: 0 });
@@ -2690,6 +2693,7 @@ const Meetings: React.FC<MeetingsProps> = ({
 
   const handleJoinFromLobby = () => {
     setIsInLobby(false);
+    setIsDailyActive(true);
   };
 
   const handleLeaveLobby = () => {
@@ -2731,6 +2735,23 @@ const Meetings: React.FC<MeetingsProps> = ({
           </button>
         </div>
       </div>
+    );
+  }
+
+  // ── Daily.co WebRTC meeting (active after lobby "Join Now") ────────────
+  if (isDailyActive && activeMeeting) {
+    return (
+      <DailyMeetingRoom
+        roomName={activeMeeting.id || DEFAULT_ROOM_ID}
+        userName={user.name || 'Guest'}
+        isHost={isHost}
+        onLeave={() => {
+          setIsDailyActive(false);
+          setIsInLobby(true);
+          lobbyStream?.getTracks().forEach(t => t.stop());
+          setActiveMeeting(null);
+        }}
+      />
     );
   }
 
